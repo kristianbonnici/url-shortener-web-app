@@ -9,6 +9,12 @@
 <body>
   <h1>URL Shortener</h1>
 
+  <!-- FLASH MESSAGES -->
+  {% for message in get_flashed_messages() %}
+  <h2>{{ message }}</h2>
+  {% endfor %}
+
+  <!-- URL SHORTENER FORM -->
   <!-- In 'form' the 'action' attribute specifies where the form will submit the data -->
   <form action="your-url" method="post">
     <label for="url">Website URL</label>
@@ -19,6 +25,19 @@
     <br>
     <input type="submit" value="Shorten">
   </form>
+
+  <!-- FILE UPLOAD FORM-->
+  <!-- To allow file upload: enctype="multipart/form-data" -->
+  <form action="your-url" method="post" enctype="multipart/form-data">
+    <label for="input_file">File</label>
+    <input type="file" name="input_file" value="" required>
+    <br>
+    <label for="code">Short Name</label>
+    <input type="text" name="code" value="" required>
+    <br>
+    <input type="submit" value="Shorten">
+  </form>
+
 </body>
 
 </html>
