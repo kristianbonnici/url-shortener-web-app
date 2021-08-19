@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 from flask import redirect, url_for, flash, abort
+from flask import session, jsonify  # for implementing sessions & cookies
 import json
 import os
 from werkzeug.utils import secure_filename
@@ -8,13 +9,12 @@ app = Flask(__name__)
 app.secret_key = 'to_be_hidden_if_put_to_production'
 
 
-@app.route('/')
-@app.route('/home')
+@app.route('/')  # homepage
 def home():
-    return render_template('index.html')
+    return render_template('index.html', codes=session.keys())
 
 
-@app.route('/your-url', methods=['GET', 'POST'])
+@app.route('/your-url', methods=['GET', 'POST'])  # submitted form page
 def your_url():
     if request.method == 'POST':
         urls = {}
@@ -47,7 +47,8 @@ def your_url():
 
         # open/create JSON file & save user's input
         with open('urls.json', 'w') as url_file:
-            json.dump(urls, url_file)
+            json.dump(urls, url_file)  # save url to JSON
+            session[request.form['code']] = True  # save to cookies
 
         # code = shortened name for URL
         return render_template('your_url.html', code=request.form['code'])
@@ -76,3 +77,8 @@ def redirect_to_url(code):
 @app.errorhandler(404)  # route to our custom 404 PAGE
 def page_not_found(error):
     return render_template('page_not_found.html'), 404
+
+
+@app.route('/api')
+def session_api():
+    return jsonify(list(session.keys()))
