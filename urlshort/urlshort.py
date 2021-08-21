@@ -6,29 +6,29 @@ import os
 from werkzeug.utils import secure_filename
 
 
-app = Blueprint('urlshort_app', __name__)
+bp = Blueprint('urlshort', __name__)
 
 
-@app.route('/')  # homepage
+@bp.route('/')  # homepage
 def home():
     return render_template('index.html', codes=session.keys())
 
 
-@app.route('/your-url', methods=['GET', 'POST'])  # submitted form page
+@bp.route('/your-url', methods=['GET', 'POST'])  # submitted form page
 def your_url():
     if request.method == 'POST':
         urls = {}
 
         # Open JSON file, if it already exists
-        if os.path.exists('../urls.json'):
-            with open('../urls.json') as url_file:
+        if os.path.exists('urls.json'):
+            with open('urls.json') as url_file:
                 urls = json.load(url_file)
 
         # If trying to override existing code --> direct to home
         if request.form['code'] in urls.keys():
             flash("""That shortname has already been taken.
                      Please select another name.""")
-            return redirect(url_for('urlshort_app.home'))
+            return redirect(url_for('urlshort.home'))
 
         # Check if URL or FILE upload by user
         if 'url' in request.form.keys():
@@ -46,20 +46,20 @@ def your_url():
             urls[request.form['code']] = {'file': full_name}
 
         # open/create JSON file & save user's input
-        with open('../urls.json', 'w') as url_file:
+        with open('urls.json', 'w') as url_file:
             json.dump(urls, url_file)  # save url to JSON
             session[request.form['code']] = True  # save to cookies
 
         # code = shortened name for URL
         return render_template('your_url.html', code=request.form['code'])
     else:
-        return redirect(url_for('urlshort_app.home'))
+        return redirect(url_for('urlshort.home'))
 
 
-@app.route('/<string:code>')  # Redirect to URL or FILE
+@bp.route('/<string:code>')  # Redirect to URL or FILE
 def redirect_to_url(code):
-    if os.path.exists('../urls.json'):
-        with open('../urls.json') as urls_file:
+    if os.path.exists('urls.json'):
+        with open('urls.json') as urls_file:
             urls = json.load(urls_file)
             if code in urls.keys():
                 # If URL
@@ -74,11 +74,11 @@ def redirect_to_url(code):
     return abort(404)
 
 
-@app.errorhandler(404)  # route to our custom 404 PAGE
+@bp.errorhandler(404)  # route to our custom 404 PAGE
 def page_not_found(error):
     return render_template('page_not_found.html'), 404
 
 
-@app.route('/api')
+@bp.route('/api')
 def session_api():
     return jsonify(list(session.keys()))
