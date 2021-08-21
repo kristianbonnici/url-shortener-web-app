@@ -1,12 +1,12 @@
-from flask import Flask, render_template, request
+from flask import Blueprint, render_template, request
 from flask import redirect, url_for, flash, abort
 from flask import session, jsonify  # for implementing sessions & cookies
 import json
 import os
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
-app.secret_key = 'to_be_hidden_if_put_to_production'
+
+app = Blueprint('urlshort_app', __name__)
 
 
 @app.route('/')  # homepage
@@ -20,15 +20,15 @@ def your_url():
         urls = {}
 
         # Open JSON file, if it already exists
-        if os.path.exists('urls.json'):
-            with open('urls.json') as url_file:
+        if os.path.exists('../urls.json'):
+            with open('../urls.json') as url_file:
                 urls = json.load(url_file)
 
         # If trying to override existing code --> direct to home
         if request.form['code'] in urls.keys():
             flash("""That shortname has already been taken.
                      Please select another name.""")
-            return redirect(url_for('home'))
+            return redirect(url_for('urlshort_app.home'))
 
         # Check if URL or FILE upload by user
         if 'url' in request.form.keys():
@@ -41,25 +41,25 @@ def your_url():
             full_name = request.form['code'] + secure_filename(f.filename)
 
             # save file to 'user_files' directory
-            f.save(os.getcwd() + '/static/user_files/' + full_name)
+            f.save(os.getcwd() + '/urlshort/static/user_files/' + full_name)
             # key='code' : value={'file':'filename'}
             urls[request.form['code']] = {'file': full_name}
 
         # open/create JSON file & save user's input
-        with open('urls.json', 'w') as url_file:
+        with open('../urls.json', 'w') as url_file:
             json.dump(urls, url_file)  # save url to JSON
             session[request.form['code']] = True  # save to cookies
 
         # code = shortened name for URL
         return render_template('your_url.html', code=request.form['code'])
     else:
-        return redirect(url_for('home'))
+        return redirect(url_for('urlshort_app.home'))
 
 
 @app.route('/<string:code>')  # Redirect to URL or FILE
 def redirect_to_url(code):
-    if os.path.exists('urls.json'):
-        with open('urls.json') as urls_file:
+    if os.path.exists('../urls.json'):
+        with open('../urls.json') as urls_file:
             urls = json.load(urls_file)
             if code in urls.keys():
                 # If URL
